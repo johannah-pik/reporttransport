@@ -11,7 +11,7 @@
 #' @returns Variables provided in different aggregation levels in MIF format
 #' @author Johanna Hoppe
 #' @importFrom quitte aggregate_map as.quitte
-#' @importFrom remind2 toolRegionSubsets
+#' @importFrom gdx readGDX
 #' @import data.table
 #' @export
 
@@ -88,69 +88,50 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
     worldDataInt[, region := "World"]
     return(worldDataInt)}, weight)
 
-  ## Additional regions
-  ## if regionSubsetList != NULL -> gdx provides 21 region resolution
-  regionSubsetList <- toolRegionSubsets(gdx)
-  if (!is.null(regionSubsetList)) {
-    # ADD EU-27 region aggregation
-    if ("EUR" %in% names(regionSubsetList)) {
-      regionSubsetList <- c(regionSubsetList, list(
-        "EU27" = c("ENC", "EWN", "ECS", "ESC", "ECE", "FRA", "DEU", "ESW")
-      ))
-    }
+  # Additional regions
+  # EDGE-T is always running on 21 region resolution -> add H12 regions
+  reg <- unique(varsToMIFext$region)
+  regSubsetMap <- helpers$regionmappingISOto21to12[!regionCode12 %in% reg]
+  regSubsetMap <- unique(regSubsetMap[, c("regionCode21", "regionCode12")])
+  EU27 <- regSubsetMap[regionCode12 == "EUR" & !regionCode21 == "UKI"]
+  EU27[, regionCode12 := "EU27"]
+  regSubsetMap <- rbind(regSubsetMap, EU27)
+  setnames(regSubsetMap, c("regionCode21", "regionCode12"), c("region", "aggrReg"))
 
-    # Create Mapping for region Aggregation out of region SubsetList
-    namesReg <- names(regionSubsetList)
-    regSubsetMap <- data.table()
-    for (i in seq_along(namesReg)) {
-      tmp <- data.table(region = regionSubsetList[[i]], aggrReg = namesReg[i])
-      regSubsetMap <- rbind(regSubsetMap, tmp)
-    }
-    regSubsetDataExt <- lapply(vars$ext, function(x, regSubsetMap) {
-      as.data.table(aggregate_map(x[region %in% unique(regSubsetMap$region)],
-                                                 regSubsetMap, by = "region"))}, regSubsetMap)
-    regSubsetDataInt <- lapply(vars$int, function(x, regSubsetMap, weight) {
-      weightedInt <- merge(x, regSubsetMap, by = intersect(names(x), names(regSubsetMap)), all.y = TRUE)
-      byCols <- names(x)
-      #sharweights include empty columns
-      emptyColumns <- names(x)[sapply(x, function(x) all(is.na(x) | x == ""))]
-      byCols <- byCols[!byCols %in% c("value") & byCols %in% names(weight) & !byCols %in% emptyColumns]
-      weight <- weight[, .(weight = sum(weight)), by = eval(byCols)]
-      weightedInt <- merge(weight, weightedInt, by = intersect(names(weightedInt), names(weight)), all.y = TRUE)
-      byCols <- names(weightedInt)
-      byCols <- byCols[!byCols %in% c("region", "value", "weight")]
-      weightedInt[, sum := sum(weight), by = eval(byCols)]
-      weightedInt[sum == 0, weight := 1, by = eval(byCols)][, sum := NULL]
-      regSubsetDataInt <- weightedInt[, .(value = sum(value * (weight / sum(weight)))), by = eval(byCols)]
-      setnames(regSubsetDataInt, "aggrReg", "region")
-      return(regSubsetDataInt)}, regSubsetMap, weight)
+  regSubsetDataExt <- lapply(vars$ext, function(x, regSubsetMap) {
+    as.data.table(aggregate_map(x[region %in% unique(regSubsetMap$region)],
+                                regSubsetMap, by = "region"))}, regSubsetMap)
+  regSubsetDataInt <- lapply(vars$int, function(x, regSubsetMap, weight) {
+    weightedInt <- merge(x, regSubsetMap, by = intersect(names(x), names(regSubsetMap)), all.y = TRUE)
+    byCols <- names(x)
+    #sharweights include empty columns
+    emptyColumns <- names(x)[sapply(x, function(x) all(is.na(x) | x == ""))]
+    byCols <- byCols[!byCols %in% c("value") & byCols %in% names(weight) & !byCols %in% emptyColumns]
+    weight <- weight[, .(weight = sum(weight)), by = eval(byCols)]
+    weightedInt <- merge(weight, weightedInt, by = intersect(names(weightedInt), names(weight)), all.y = TRUE)
+    byCols <- names(weightedInt)
+    byCols <- byCols[!byCols %in% c("region", "value", "weight")]
+    weightedInt[, sum := sum(weight), by = eval(byCols)]
+    weightedInt[sum == 0, weight := 1, by = eval(byCols)][, sum := NULL]
+    regSubsetDataInt <- weightedInt[, .(value = sum(value * (weight / sum(weight)))), by = eval(byCols)]
+    setnames(regSubsetDataInt, "aggrReg", "region")
+    return(regSubsetDataInt)}, regSubsetMap, weight)
 
-    noAggregationvars <- rbind(noAggregationvars,
-                               rbindlist(regSubsetDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
-                               rbindlist(worldDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
-                               rbindlist(vars$ext[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                               rbindlist(regSubsetDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                               rbindlist(worldDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
+  noAggregationvars <- rbind(noAggregationvars,
+                             rbindlist(regSubsetDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
+                             rbindlist(worldDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
+                             rbindlist(vars$ext[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
+                             rbindlist(regSubsetDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
+                             rbindlist(worldDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
 
-    varsToMIFint <- rbind(varsToMIFint,
-                          rbindlist(regSubsetDataInt[!names(regSubsetDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
-                          rbindlist(worldDataInt[!names(worldDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE))
+  varsToMIFint <- rbind(varsToMIFint,
+                        rbindlist(regSubsetDataInt[!names(regSubsetDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
+                        rbindlist(worldDataInt[!names(worldDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE))
 
-    varsToMIFext <- rbind(varsToMIFext,
-                          rbindlist(regSubsetDataExt[!names(regSubsetDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                          rbindlist(worldDataExt[!names(worldDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
-   } else {
-    noAggregationvars <- rbind(noAggregationvars,
-                               rbindlist(worldDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
-                               rbindlist(vars$ext[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                               rbindlist(worldDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
+  varsToMIFext <- rbind(varsToMIFext,
+                        rbindlist(regSubsetDataExt[!names(regSubsetDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
+                        rbindlist(worldDataExt[!names(worldDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
 
-    varsToMIFint <- rbind(varsToMIFint,
-                          rbindlist(worldDataInt[!names(worldDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE))
-
-    varsToMIFext <- rbind(varsToMIFext,
-                          rbindlist(worldDataExt[!names(worldDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
-  } # close additional regions
 
   # Apply variable naming convention----------------------------------------------------------
   varsToMIFext <- applyReportingNames(varsToMIFext, helpers$reportingNames)
@@ -176,12 +157,15 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
   toMIF[, model := model][, scenario := scenario]
   toMIF <- as.quitte(toMIF)
 
-  toMIF <- renameDuplicateVariables(toMIF)
-
   if (anyNA(toMIF)) stop("MIF output contains NAs.
                          Please check reportAndAggregatedMIF()")
   if (anyDuplicated(toMIF)) stop("MIF output contains duplicates.
                                  Please check reportAndAggregatedMIF()")
+
+  # If gdx is provided in H12 regional aggregation, filter out other regions
+  # Maybe this is not necessary?
+  numberOfRegions <- length(readGDX(gdx, "all_regi"))
+  if (numberOfRegions == 12) toMIF <- toMIF[region %in% unique(helpers$regionmappingISOto21to12$regionCode12)]
 
   return(toMIF)
 }
