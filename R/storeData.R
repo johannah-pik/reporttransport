@@ -87,7 +87,7 @@ storeData <- function(outputFolder, varsList = NULL, ...) {
   ## than transferred in vars)
   #########################################################################
   # general data
-  browser()
+
   if (!(is.null(vars$SSPscen) & is.null(vars$transportPolScen) & is.null(vars$demScen) & is.null(vars$startyear))) {
     # nolint: vector_logic_linter
     cfg <- list(

@@ -193,7 +193,6 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
   #########################################################################
   ## Transfer output variables to MIF format
   #########################################################################
-  browser()
   if (isTransportReported) {
     reporting <- convertToMIF(vars                        = outputVars,
                               GDPMER                      = data$GDPMER,
