@@ -91,11 +91,12 @@ storeData <- function(outputFolder, varsList = NULL, ...) {
     cfg <- list(
       SSPscen = vars$SSPscen,
       transportPolScen = vars$transportPolScen,
+      cm_startyear = vars$startyear,
       demScen = vars$demScen,
       timeStamp = format(Sys.time(), "%Y-%m-%d_%H.%M")
     )
     saveRDS(cfg, file.path(outputFolder, "cfg.RDS"))
-    vars <- vars[!names(vars) %in% c("SSPscen", "transportPolScen", "demScen")]
+    vars <- vars[!names(vars) %in% c("SSPscen", "transportPolScen", "demScen", "startyear")]
   }
   if (!is.null(vars$gdxPath)) {
     file.copy(vars$gdxPath, file.path(outputFolder))
