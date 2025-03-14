@@ -80,7 +80,7 @@ reportREMINDinputVarSet <- function(fleetESdemand,
   shares_LDV_transport <- toolReportsharesLDVtransport(fleetFEdemand, timeResReporting, demScen,
                                                        SSPscen, transportPolScen, helpers)
 
-  input <- append(input, list(shares_LDV_transport = shares_LDV_transport))
+  inputREMIND <- append(inputREMIND, list(shares_LDV_transport = shares_LDV_transport))
 
-  return(input)
+  return(inputREMIND)
 }
