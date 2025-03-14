@@ -87,12 +87,15 @@ storeData <- function(outputFolder, varsList = NULL, ...) {
   ## than transferred in vars)
   #########################################################################
   # general data
-  if (!(is.null(vars$SSPscen) & is.null(vars$transportPolScen) & is.null(vars$demScen))) {                          # nolint: vector_logic_linter
+
+  if (!(is.null(vars$SSPscen) & is.null(vars$transportPolScen) & is.null(vars$demScen) & is.null(vars$startyear))) {
+    # nolint: vector_logic_linter
     cfg <- list(
       SSPscen = vars$SSPscen,
       transportPolScen = vars$transportPolScen,
       cm_startyear = vars$startyear,
       demScen = vars$demScen,
+      cm_startyear = vars$startyear,
       timeStamp = format(Sys.time(), "%Y-%m-%d_%H.%M")
     )
     saveRDS(cfg, file.path(outputFolder, "cfg.RDS"))
