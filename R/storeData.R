@@ -93,6 +93,7 @@ storeData <- function(outputFolder, varsList = NULL, ...) {
     cfg <- list(
       SSPscen = vars$SSPscen,
       transportPolScen = vars$transportPolScen,
+      cm_startyear = vars$startyear,
       demScen = vars$demScen,
       cm_startyear = vars$startyear,
       timeStamp = format(Sys.time(), "%Y-%m-%d_%H.%M")

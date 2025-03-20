@@ -18,6 +18,18 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
     synToBioShareOverall <- fuel <- technology <- univocalName <- share <- emiSectors <- period <-
       to <- from <- sumbio <- sumsyn <- . <- region <- unit <- NULL
 
+  disaggregateSplit <- function(REMINDsegmentSplit, weight, mapping) {
+
+    setnames(REMINDsegmentSplit, "region", "regionCode12")
+    split <- merge(REMINDsegmentSplit, mapping,
+                                  by = "regionCode12", allow.cartesian = TRUE)
+    split <- merge(split, weight, intersect(names(split), names(weight)))
+    split[, sumWeight := sum(weight), by = c("period", "regionCode12")]
+    split <- split[, .(value = value * (weight/sumWeight)), by = c("regionCode21", "period", "fuel", "variable", "technology")]
+    setnames(split, "regionCode21", "region")
+    return(split)
+  }
+
   calcSplit <- function(REMINDsegment, dataREMIND, splitOverall) {                                     # nolint: object_name_linter
 
     # Final energy carrier types liquids and gases consist of the following secondary energy carrier types in REMIND
@@ -149,8 +161,19 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
   splitTransportOverall <- list(liqBioToSyn = liqBioToSyn, gasesBioToSyn = gasesBioToSyn)
 
   REMINDsegments <- c("LDVs", "nonLDVs", "bunker")                                                                     # nolint: object_name_linter
+
   splitShares <- sapply(REMINDsegments, calcSplit, demFeSector, splitTransportOverall,               # nolint: undesirable_function_linter
                         simplify = FALSE, USE.NAMES = TRUE)
+
+  numberOfRegions <- length(gdx::readGDX(gdxPath, "all_regi"))
+  if (numberOfRegions == 12) {
+    weightFE <- copy(dtFE)
+    setnames(weightFE, c("region", "value"), c("regionCode21", "weight"))
+    # Average between all sectors for now
+    weightFE <- weightFE[, .(weight = sum(weight)), by = c("regionCode21", "period", "technology")]
+    map <- unique(helpers$regionmappingISOto21to12[, c("regionCode12", "regionCode21")])
+    splitShares <- lapply(splitShares, disaggregateSplit, weightFE, map)
+  }
 
   # Make sure that only Liquids are supplied
   dtFE <- copy(dtFE)
