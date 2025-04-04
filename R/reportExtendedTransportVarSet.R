@@ -80,10 +80,10 @@ reportExtendedTransportVarSet <- function(data, baseVarSet, timeResReporting) {
                           vintages      = vintages)
   )
 
-  outputVarsInt <- c(outputVarsInt) #,
-                    # list(scenScpecPrefTrends = data$scenSpecPrefTrends[, level := NULL],
-                    #      combinedCAPEXandOPEX = combinedCAPEXandOPEX)
- # )
+  outputVarsInt <- c(outputVarsInt,
+                     list(scenScpecPrefTrends = data$scenSpecPrefTrends[, level := NULL],
+                          combinedCAPEXandOPEX = combinedCAPEXandOPEX)
+  )
   outputVars <- list(ext = outputVarsExt,
                      int = outputVarsInt)
   return(outputVars)
