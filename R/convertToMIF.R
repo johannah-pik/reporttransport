@@ -16,7 +16,6 @@
 #' @export
 
 convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTransportExtendedReported = FALSE) {       # nolint: object_name_linter
-
   rownum <- name <- fuel <- aggrReg <- variable <- reportName <- region <- univocalName <- technology <- NULL
 
   applyReportingNames <- function(vars, mapNames) {
@@ -61,15 +60,15 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
   setnames(weight, "value", "weight")
 
   #split shareweights
-  if (!is.null(vars$int$scenScpecPrefTrends)) {
+  if (!is.null(vars$int$scenSpecPrefTrends)) {
     Preferences <- list(
-      PrefrenceFV = vars$int$scenScpecPrefTrends[variable == "Preference|FV"],
-      PrefrenceS1S = vars$int$scenScpecPrefTrends[variable == "Preference|S1S"],
-      PrefrenceS2S1 = vars$int$scenScpecPrefTrends[variable == "Preference|S2S1"],
-      PrefrenceS3S2 = vars$int$scenScpecPrefTrends[variable == "Preference|S3S2"],
-      PrefrenceVS3 = vars$int$scenScpecPrefTrends[variable == "Preference|VS3"]
+      PrefrenceFV = vars$int$scenSpecPrefTrends[variable == "Preference|FV"],
+      PrefrenceS1S = vars$int$scenSpecPrefTrends[variable == "Preference|S1S"],
+      PrefrenceS2S1 = vars$int$scenSpecPrefTrends[variable == "Preference|S2S1"],
+      PrefrenceS3S2 = vars$int$scenSpecPrefTrends[variable == "Preference|S3S2"],
+      PrefrenceVS3 = vars$int$scenSpecPrefTrends[variable == "Preference|VS3"]
     )
-    vars$int <- vars$int[!names(vars$int) == "scenScpecPrefTrends"]
+    vars$int <- vars$int[!names(vars$int) == "scenSpecPrefTrends"]
     vars$int <- append(vars$int, Preferences)
   }
 
@@ -161,11 +160,6 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
                          Please check reportAndAggregatedMIF()")
   if (anyDuplicated(toMIF)) stop("MIF output contains duplicates.
                                  Please check reportAndAggregatedMIF()")
-
-  # If gdx is provided in H12 regional aggregation, filter out other regions
-  # Maybe this is not necessary?
-  numberOfRegions <- length(readGDX(gdx, "all_regi"))
-  if (numberOfRegions == 12) toMIF <- toMIF[region %in% unique(helpers$regionmappingISOto21to12$regionCode12)]
 
   return(toMIF)
 }
