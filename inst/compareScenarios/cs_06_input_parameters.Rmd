@@ -103,7 +103,7 @@ showTransportInputMultiLinePlots(plotData, itemsSplit, nrowNum = 2)
 
 #### Freight Trucks
 ```{r}
-itemsSplit <- items[grepl(".*Freight.*", .) & grepl(".*Truck.*", .)]
+itemsSplit <- items[grepl(".*Freight.*", items) & grepl(".*Truck.*", items)]
 plotData <- data %>%
   filter(variable %in% itemsSplit) %>%
   mutate(variable = gsub("^.*\\|Road\\|[A-Za-z]+\\|", "", variable))
