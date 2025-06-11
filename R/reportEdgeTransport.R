@@ -162,7 +162,7 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
   #########################################################################
   # If you want to change timeResReporting to timesteps outside the modeleled timesteps,
   # please add an interpolation step
-  timeResReporting <-  c(seq(2005, 2060, by = 5), seq(2070, 2110, by = 10), 2130, 2150)
+  timeResReporting <-  c(seq(2015, 2060, by = 5), seq(2070, 2110, by = 10), 2130, 2150)
   # Apply time resolution that should be reported
   data <- lapply(data, applyReportingTimeRes, timeResReporting)
   baseVarSet <- lapply(baseVarSet, applyReportingTimeRes, timeResReporting)
