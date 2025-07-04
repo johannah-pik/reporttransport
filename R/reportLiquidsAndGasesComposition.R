@@ -18,7 +18,6 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
       to <- from <- sumbio <- sumsyn <- . <- region <- unit <- NULL
 
   disaggregateShare <- function(REMINDsegmentShare, mapping) {
-    browser()
     setnames(REMINDsegmentShare, "region", "regionCode12")
     share <- merge(REMINDsegmentShare, mapping,
                    by = "regionCode12", allow.cartesian = TRUE)
@@ -160,12 +159,23 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
   REMINDsegments <- c("LDVs", "nonLDVs", "bunker")                                                                     # nolint: object_name_linter
 
   numberOfRegions <- length(gdx::readGDX(gdxPath, "all_regi"))
-  # de-aggregate from 12 to 21 regions if needed
-  # using same share for all sub regions
+
   if (numberOfRegions == 12) {
+    # store data of IND as an example of a non-aggregated region for testing
+    # reorder colums for comparison
+    splitTransportTestIND <- copy(liqBioToSyn)[region == "IND"][, c(2,3,4,1)]
+
+    # de-aggregate from 12 to 21 regions if needed
+    # using same share for all sub regions
     map <- unique(helpers$regionmappingISOto21to12[, c("regionCode12", "regionCode21")])
     splitTransportOverall <- lapply(splitTransportOverall, disaggregateShare, map)
     demFeSector <- disaggregateShare(demFeSector, map)
+
+    # test: share for IND should stay unchanged
+    # use data.frame for comparison to ignore keys
+    if(!all.equal(as.data.frame(splitTransportTestIND), as.data.frame(splitTransportOverall[["liqBioToSyn"]][region == "IND"]))){
+      stop("Error in deaggregation of FE shares in reportLiquidsAndGasesComposition()")
+    }
   }
 
   splitShares <- sapply(REMINDsegments, calcSplit, demFeSector, splitTransportOverall,               # nolint: undesirable_function_linter
