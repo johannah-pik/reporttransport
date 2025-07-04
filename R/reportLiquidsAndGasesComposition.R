@@ -13,21 +13,18 @@
 #' @export
 
 reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
-
   all <- value <- Fossil <- Biomass <- Hydrogen <- variable <- type <- from <- bioToSynShareOverall <-
     synToBioShareOverall <- fuel <- technology <- univocalName <- share <- emiSectors <- period <-
       to <- from <- sumbio <- sumsyn <- . <- region <- unit <- NULL
 
-  disaggregateSplit <- function(REMINDsegmentSplit, weight, mapping) {
-
-    setnames(REMINDsegmentSplit, "region", "regionCode12")
-    split <- merge(REMINDsegmentSplit, mapping,
-                                  by = "regionCode12", allow.cartesian = TRUE)
-    split <- merge(split, weight, intersect(names(split), names(weight)))
-    split[, sumWeight := sum(weight), by = c("period", "regionCode12")]
-    split <- split[, .(value = value * (weight/sumWeight)), by = c("regionCode21", "period", "fuel", "variable", "technology")]
-    setnames(split, "regionCode21", "region")
-    return(split)
+  disaggregateShare <- function(REMINDsegmentShare, mapping) {
+    browser()
+    setnames(REMINDsegmentShare, "region", "regionCode12")
+    share <- merge(REMINDsegmentShare, mapping,
+                   by = "regionCode12", allow.cartesian = TRUE)
+    setnames(share, "regionCode21", "region")
+    share <- share[, regionCode12 := NULL]
+    return(share)
   }
 
   calcSplit <- function(REMINDsegment, dataREMIND, splitOverall) {                                     # nolint: object_name_linter
@@ -61,7 +58,7 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
     # the fossil share is kept constant, the remaining amount is distributed according to the
     # biotosynshareoverall and the synToBioShareOverall
     # e.g. 500 -> 300 is disrtributed to fossil (in accordance to fossil share)
-    # remaining 200 is distributed liked this: bio -> 200 * biotosynshareoverall, syn <- 200 * synToBioShareOverall
+    # remaining 200 is distributed liked this: bio <- 200 * biotosynshareoverall, syn <- 200 * synToBioShareOverall
     dataLiquids[, Fossil := value[from == "seliqfos"] / sum(value), by = c("region", "period")]
     dataLiquids[, Biomass := sum(value[from %in% c("seliqbio", "seliqsyn")]) /
                   sum(value) * bioToSynShareOverall, by = c("region", "period")]
@@ -162,20 +159,19 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
 
   REMINDsegments <- c("LDVs", "nonLDVs", "bunker")                                                                     # nolint: object_name_linter
 
+  numberOfRegions <- length(gdx::readGDX(gdxPath, "all_regi"))
+  # de-aggregate from 12 to 21 regions if needed
+  # using same share for all sub regions
+  if (numberOfRegions == 12) {
+    map <- unique(helpers$regionmappingISOto21to12[, c("regionCode12", "regionCode21")])
+    splitTransportOverall <- lapply(splitTransportOverall, disaggregateShare, map)
+    demFeSector <- disaggregateShare(demFeSector, map)
+  }
+
   splitShares <- sapply(REMINDsegments, calcSplit, demFeSector, splitTransportOverall,               # nolint: undesirable_function_linter
                         simplify = FALSE, USE.NAMES = TRUE)
 
-  numberOfRegions <- length(gdx::readGDX(gdxPath, "all_regi"))
-  if (numberOfRegions == 12) {
-    weightFE <- copy(dtFE)
-    setnames(weightFE, c("region", "value"), c("regionCode21", "weight"))
-    # Average between all sectors for now
-    weightFE <- weightFE[, .(weight = sum(weight)), by = c("regionCode21", "period", "technology")]
-    map <- unique(helpers$regionmappingISOto21to12[, c("regionCode12", "regionCode21")])
-    splitShares <- lapply(splitShares, disaggregateSplit, weightFE, map)
-  }
-
-  # Make sure that only Liquids are supplied
+  # Make sure that only Liquids are supplied (should it say: liquids and gases?)
   dtFE <- copy(dtFE)
   dtFE <- dtFE[technology %in% c("Liquids", "Gases")]
   splitShares <- lapply(splitShares, approx_dt, xdata = unique(dtFE$period), xcol = "period", ycol = "value", extrapolate = TRUE)
