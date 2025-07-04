@@ -173,7 +173,7 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
 
     # test: share for IND should stay unchanged
     # use data.frame for comparison to ignore keys
-    if(!all.equal(as.data.frame(splitTransportTestIND), as.data.frame(splitTransportOverall[["liqBioToSyn"]][region == "IND"]))){
+    if(!isTRUE(all.equal(as.data.frame(splitTransportTestIND), as.data.frame(splitTransportOverall[["liqBioToSyn"]][region == "IND"])))){
       stop("Error in deaggregation of FE shares in reportLiquidsAndGasesComposition()")
     }
   }
