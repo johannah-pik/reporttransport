@@ -14,8 +14,8 @@
 
 reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
   all <- value <- Fossil <- Biomass <- Hydrogen <- variable <- type <- from <- bioToSynShareOverall <-
-    synToBioShareOverall <- fuel <- technology <- univocalName <- share <- emiSectors <- period <-
-      to <- from <- sumbio <- sumsyn <- . <- region <- unit <- NULL
+  synToBioShareOverall <- fuel <- technology <- univocalName <- share <- emiSectors <- period <-
+  to <- from <- sumbio <- sumsyn <- . <- region <- unit <- NULL
 
   disaggregateShare <- function(REMINDsegmentShare, mapping) {
     setnames(REMINDsegmentShare, "region", "regionCode12")
@@ -87,7 +87,7 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
 
     shares[, sum := sum(value), by = c("region", "period", "technology")]
 
-    if (anyNA(shares) | nrow(shares[(sum < 0.9999 | sum > 1.0001) & sum != 0])) {
+    if (anyNA(shares) || nrow(shares[(sum < 0.9999 | sum > 1.0001) & sum != 0])) {
       stop("Something went wrong with the mixed carrier splitting. Please check calcSplit()")
     }
     shares[, c("sum") := NULL]
@@ -161,8 +161,7 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
   numberOfRegions <- length(gdx::readGDX(gdxPath, "all_regi"))
   if (numberOfRegions == 12) {
     # store data of IND as an example of a non-aggregated region for testing
-    # reorder colums for comparison
-    splitTransportTestIND <- copy(liqBioToSyn)[region == "IND"][, c(2,3,4,1)]
+    testIND <- copy(liqBioToSyn)[region == "IND"]
 
     # de-aggregate from 12 to 21 regions if needed
     # using same share for all sub regions
@@ -171,8 +170,11 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
     demFeSector <- disaggregateShare(demFeSector, map)
 
     # test: share for IND should stay unchanged
-    # use data.frame for comparison to ignore keys
-    if(!isTRUE(all.equal(as.data.frame(splitTransportTestIND), as.data.frame(splitTransportOverall[["liqBioToSyn"]][region == "IND"])))){
+    # use data.frame for comparison to ignore keys, reorder cols
+    testINDafter <- as.data.frame(splitTransportOverall[["liqBioToSyn"]][region == "IND"])
+    cols <- names(testINDafter)
+    testIND <- as.data.frame(testIND[, ..cols])
+    if (!isTRUE(all.equal(testIND, testINDafter))) {
       stop("Error in deaggregation of FE shares in reportLiquidsAndGasesComposition()")
     }
   }

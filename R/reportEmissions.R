@@ -22,7 +22,7 @@ reportEmissions <- function(dtFE, gdxPath, prefix, helpers) {
   disaggregateFactor <- function(REMINDfactor, mapping) {
     setnames(REMINDfactor, "region", "regionCode12")
     disaggregateFactor <- merge(REMINDfactor, mapping,
-                   by = "regionCode12", allow.cartesian = TRUE)
+                                by = "regionCode12", allow.cartesian = TRUE)
     setnames(disaggregateFactor, "regionCode21", "region")
     disaggregateFactor <- disaggregateFactor[, regionCode12 := NULL]
     return(disaggregateFactor)
@@ -39,7 +39,7 @@ reportEmissions <- function(dtFE, gdxPath, prefix, helpers) {
   if (numberOfRegions == 12) {
     # store data of IND as an example of a non-aggregated region for testing
     # reorder colums for comparison
-    TestIND <- copy(emissionFactors)[region == "IND"]
+    testIND <- copy(emissionFactors)[region == "IND"]
 
     # de-aggregate from 12 to 21 regions if needed
     # using same share for all sub regions
@@ -49,12 +49,12 @@ reportEmissions <- function(dtFE, gdxPath, prefix, helpers) {
     # test: values for IND should stay unchanged
     # bring in same order, use data.frame for comparison to ignore keys
     cols <- names(emissionFactors)
-    TestIND <- TestIND[, ..cols]
-    TestIND <- as.data.frame(TestIND[do.call(order, TestIND)])
-    TestINDafter <- emissionFactors[region == "IND"]
-    TestINDafter <- as.data.frame(TestINDafter[do.call(order, TestINDafter)])
+    testIND <- testIND[, ..cols]
+    testIND <- as.data.frame(testIND[do.call(order, testIND)])
+    testINDafter <- emissionFactors[region == "IND"]
+    testINDafter <- as.data.frame(testINDafter[do.call(order, testINDafter)])
 
-    if(!isTRUE(all.equal(TestIND, TestINDafter, check.attributes = FALSE))){
+    if (!isTRUE(all.equal(testIND, testINDafter, check.attributes = FALSE))) {
       stop("Error in disaggregation of emission Factors in reportEmissions()")
     }
   }
