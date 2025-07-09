@@ -23,7 +23,6 @@ Imports:
     gdxrrw,
     piamPlotComparison,
     quitte,
-    remind2,
     rmndt,
     utils
 Suggests:
