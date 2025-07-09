@@ -159,7 +159,6 @@ reportLiquidsAndGasesComposition <- function(dtFE, gdxPath, helpers) {
   REMINDsegments <- c("LDVs", "nonLDVs", "bunker")                                                                     # nolint: object_name_linter
 
   numberOfRegions <- length(gdx::readGDX(gdxPath, "all_regi"))
-
   if (numberOfRegions == 12) {
     # store data of IND as an example of a non-aggregated region for testing
     # reorder colums for comparison
