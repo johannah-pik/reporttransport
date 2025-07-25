@@ -5,7 +5,6 @@
 #' @param helpers List of helpers
 #' @param scenario Scenario name in MIF entry
 #' @param model Model name in MIF entry
-#' @param gdx GDX file containing further regional aggregation levels
 #' @param isTransportExtendedReported Switch to enable the extended transport variable set
 #'
 #' @returns Variables provided in different aggregation levels in MIF format
@@ -15,7 +14,7 @@
 #' @import data.table
 #' @export
 
-convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTransportExtendedReported = FALSE) {       # nolint: object_name_linter
+convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExtendedReported = FALSE) {       # nolint: object_name_linter
   rownum <- name <- fuel <- aggrReg <- variable <- reportName <- region <- univocalName <- technology <- NULL
 
   applyReportingNames <- function(vars, mapNames) {

@@ -16,7 +16,8 @@ reportTransportVarSet <- function(data, baseVarSet) {
   varsFEcomposition <- baseVarSet$ext$fleetFEdemand[technology %in% c("Liquids", "Gases")]
   mixedCarrierSplit <- reportLiquidsAndGasesComposition(dtFE = varsFEcomposition,
                                                         gdxPath = data$gdxPath,
-                                                         helpers = data$helpers)
+                                                        helpers = data$helpers)
+
   fleetFEdemandsplittedCarriers <- copy(baseVarSet$ext$fleetFEdemand[!technology %in% c("Liquids", "Gases")])
   fleetFEdemandsplittedCarriers[, fuel := NA]
   fleetFEdemandsplittedCarriers <- rbind(fleetFEdemandsplittedCarriers, mixedCarrierSplit$splittedCarriers)
