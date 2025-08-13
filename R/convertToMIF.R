@@ -10,7 +10,6 @@
 #' @returns Variables provided in different aggregation levels in MIF format
 #' @author Johanna Hoppe
 #' @importFrom quitte aggregate_map as.quitte
-#' @importFrom gdx readGDX
 #' @import data.table
 #' @export
 

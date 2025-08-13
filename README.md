@@ -49,7 +49,7 @@ A BibTeX entry for LaTeX users is
 @Misc{,
   title = {reporttransport: Reporting package for edgeTransport},
   author = {Johanna Hoppe and Jarusch Muessel and Alex K. Hagen},
-  date = {2025-07-28},
+  date = {2025-08-13},
   year = {2025},
   url = {https://github.com/pik-piam/reporttransport},
   note = {Version: 1.0.1},

@@ -106,7 +106,15 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
       cat("More than one gdx file found. The following one was chosen\n")
       cat(gdxPath, sep = "\n")
     } else if (length(gdxPath) == 0) {
-      stop("No gdx files found in the specified directory.\n")
+
+      # path to the gdx file on the REMIND cluster
+      message("Trying fallback path ..")
+      gdxPath <- "/p/projects/rd3mod/inputdata/sources/REMINDinputForTransportStandalone/v1.2/fulldata.gdx"
+
+      if (!file.exists(gdxPath)) {
+        stop("No gdx file found.\n")
+      }
+
     }
     data$gdxPath <- gdxPath
   }
