@@ -85,6 +85,7 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
     weightedInt[sum == 0, weight := 1, by = eval(byCols)][, sum := NULL]
     worldDataInt <- weightedInt[, .(value = sum(value * (weight / sum(weight)))), by = eval(byCols)]
     worldDataInt[, region := "World"]
+    worldDataInt[, value := fifelse(is.na(value) | is.nan(value) | is.infinite(value), 1, value)]
     return(worldDataInt)}, weight)
 
   # Additional regions
