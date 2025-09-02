@@ -59,6 +59,7 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
   weight[, c("variable", "unit") := NULL]
   setnames(weight, "value", "weight")
 
+  # Motorcycles >250cc are not available in India and would lead to NA in world aggregation -> add weight and seit it to 0
   motor250 <- copy(weight[region == "IND" & vehicleType == "Motorcycle (50-250cc)"])[
                       , `:=`(weight = 0, vehicleType = "Motorcycle (>250cc)")]
   weight <- rbind(weight, motor250)
