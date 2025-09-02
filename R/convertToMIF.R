@@ -59,6 +59,11 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
   weight[, c("variable", "unit") := NULL]
   setnames(weight, "value", "weight")
 
+  motor250 <- copy(weight[region == "IND" & vehicleType == "Motorcycle (50-250cc)"])[
+                      , `:=`(weight = 0, vehicleType = "Motorcycle (>250cc)")]
+  weight <- rbind(weight, motor250)
+
+
   #split shareweights
   if (!is.null(vars$int$scenSpecPrefTrends)) {
     Preferences <- list(
@@ -85,7 +90,6 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, gdx,  isTranspo
     weightedInt[sum == 0, weight := 1, by = eval(byCols)][, sum := NULL]
     worldDataInt <- weightedInt[, .(value = sum(value * (weight / sum(weight)))), by = eval(byCols)]
     worldDataInt[, region := "World"]
-    worldDataInt[, value := fifelse(is.na(value) | is.nan(value) | is.infinite(value), 1, value)]
     return(worldDataInt)}, weight)
 
   # Additional regions
