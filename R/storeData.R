@@ -102,8 +102,9 @@ storeData <- function(outputFolder, varsList = NULL, ...) {
   }
   if (!is.null(vars$gdxPath)) {
     file.copy(vars$gdxPath, file.path(outputFolder))
-    vars <- vars[!names(vars) %in% c("gdxPath")]
   }
+
+  vars <- vars[names(vars) != "gdxPath"]
 
   # store calibration data if provided
   if (!is.null(vars$histPrefs)) {

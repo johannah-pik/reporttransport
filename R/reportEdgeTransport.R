@@ -41,6 +41,7 @@
 reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NULL, isTransportReported = TRUE,
                                 isTransportExtendedReported = FALSE, isAnalyticsReported = FALSE,
                                 isREMINDinputReported = FALSE, isStored = TRUE, ...) {
+
   applyReportingTimeRes <- function(item, timeRes) {
     if (typeof(item) %in% c("character", "double") | "decisionTree" %in% names(item)) return(item)
     else if (is.data.table(item) & ("period" %chin% colnames(item))) item <- item[period %in% timeRes]
@@ -96,7 +97,8 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
   if (is.null(data$scenarioName)) data$scenarioName <- paste0(data$transportPolScen[2], " ", data$SSPscen[2])
   if (is.null(data$modelName)) data$modelName <- "EDGE-T"
 
-  if (is.null(data$gdxPath)) {
+  if (isTransportReported && is.null(data$gdxPath)) {
+    message("Trying to find a gdx for transport reporting..")
     gdxPath <- list.files(path = folderPath, pattern = "\\.gdx$", full.names = TRUE)
     # Check if any files were found
     if (length(gdxPath) > 1) {
@@ -104,7 +106,15 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
       cat("More than one gdx file found. The following one was chosen\n")
       cat(gdxPath, sep = "\n")
     } else if (length(gdxPath) == 0) {
-      stop("No gdx files found in the specified directory.\n")
+
+      # path to the gdx file on the REMIND cluster
+      message("Trying fallback path ..")
+      gdxPath <- "/p/projects/rd3mod/inputdata/sources/REMINDinputForTransportStandalone/v1.2/fulldata.gdx"
+
+      if (!file.exists(gdxPath)) {
+        stop("No gdx file found.\n")
+      }
+
     }
     data$gdxPath <- gdxPath
   }
@@ -198,7 +208,6 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
                               helpers                     = data$helpers,
                               scenario                    = data$scenarioName,
                               model                       = data$modelName,
-                              gdx                         = data$gdxPath,
                               isTransportExtendedReported = isTransportExtendedReported)
 
     if (isStored) write.mif(reporting, file.path(folderPath, "Transport.mif"))
