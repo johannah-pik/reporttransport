@@ -16,7 +16,8 @@ library(ggplot2)
 
 
 ```{r read in data, echo=FALSE}
-path <- "C:/Users/johannah/Documents/EDGE-Transport/fixCalibration/"
+#path to runs that shall be evaluated
+path <- ""
 files <- list.files(path, pattern = ".*calibrationReport.RDS", full.names = TRUE, recursive = TRUE)
 
 data <- rbindlist(lapply(files, function(x){
@@ -28,7 +29,8 @@ data <- rbindlist(lapply(files, function(x){
 
 regions <- unique(data$region)
 
-#test
+#test only a specific region or vehicle type:
+
 #reg <- "MEA"
 #data <- data[region == reg]
 #vehType <- "Truck (0-3_5t)"
