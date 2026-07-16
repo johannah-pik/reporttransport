@@ -147,7 +147,7 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
     # Overwrite the full data on sales level with the harmonized data on fleet level
     data$ESdemandFVsalesLevel <- harmESdemandFV
     # Overwrite specifically the data that is taken for LDV 4W demand on fleet level
-    data$fleetSizeAndComposition$fleetESdemand <- harmESdemandFV[grepl("Bus.*|.*4W|.*freight_road.*", subsectorL3)]
+    data$fleetSizeAndComposition$fleetESdemand <- harmESdemandFV[subsectorL3 %in% unique(data$fleetSizeAndComposition$fleetESdemand$subsectorL3)]
   }
 
   # Base variable set that is needed to report REMIND input data and additional detailed transport data
@@ -243,7 +243,7 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
         mif <- mifs[grepl(".*withoutPlus\\.mif", mifs)]
         #Select matching variables
 
-        REMINDvars <- as.data.table(read.quitte(mif))
+        REMINDvars <- as.data.table(quitte::read.quitte(mif))
         setnames(REMINDvars, c("variable", "value"),
                  c("REMINDvar", "REMINDval"))
         REMINDvars <-  merge(REMINDvars, remindEDGEvarMap, by = "REMINDvar")

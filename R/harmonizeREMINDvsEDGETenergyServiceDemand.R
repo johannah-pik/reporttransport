@@ -22,6 +22,8 @@ harmonizeREMINDvsEDGETenergyServiceDemand <- function(gdx, ESdemandFVsalesLevel,
   harmREMINDdemand <- edgeTransport::toolLoadREMINDesDemand(gdx, helpers)
   setnames(harmREMINDdemand, "value", "harmREMINDdemand")
   ESdemandFVfleetLevel <- rbind(ESdemandFVsalesLevel[!grepl("Bus.*|.*4W|.*freight_road.*", subsectorL3)],
+  # Calculate EDGE-T energy service demand for vehicle fleet
+  ESdemandFVfleetLevel <- rbind(ESdemandFVsalesLevel[!subsectorL3 %in% fleetESdemand$subsectorL3],
                          fleetESdemand)
   #Change regional resolution to caluclate harmonizationfactors if necessary
   if (length(unique(harmREMINDdemand$region)) == 12) {
