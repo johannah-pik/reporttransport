@@ -104,7 +104,7 @@ fleetFEdemand <- baseOutput$ext$fleetFEdemand
   setnames(EDGEtoREMINDes, "value", "EDGEtoREMINDes")
 
   # vm_prodEs used in reportFE() for REMIND mif -> REMINDprodEs
-  vm_prodEs <- gdx2::readGDX(gdxPath, c("vm_prodEs"), restoreZeros = FALSE)[, , "level", drop = TRUE]
+  vm_prodEs <- gdx2::readGDX(gdxPath, c("v_prodEs"), restoreZeros = FALSE)[, , "level", drop = TRUE]
   vm_prodEs <- magpie2dt(vm_prodEs, regioncol = "all_regi",
                          yearcol = "tall", datacols = c("all_enty", "all_esty", "all_teEs"), valcol = "REMINDprodEs")
   vm_prodEs[, c("all_enty", "all_esty") := NULL]
