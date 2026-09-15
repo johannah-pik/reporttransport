@@ -1,4 +1,4 @@
-#' Calculate shares from aggregated reporting variables
+#' Calculate shares based on aggregated variables ("...4W|BEV" with "...|4W" as the denominator)
 #'
 #' @param dt  containing reporting variables.
 #' @param shareGroups Named list of denominator variables and their categories.
@@ -6,7 +6,6 @@
 #'
 #' @returns dt containing the calculated share variables.
 #' @import data.table
-#' @keywords internal
 #' @noRd
 
 calcShares <- function(dt, shareGroups, tolerance = 1e-6) {

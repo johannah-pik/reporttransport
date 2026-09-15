@@ -1,14 +1,13 @@
 #' Aggregate population for reporting
 #'
-#' Population can use a different regional resolution from the other reporting
-#' variables. Aggregate only the detailed regions covered by the supplied map,
+#' Population should be able to handle different regional resolutions from (H12 and EU21).
+#' Aggregate detailed regions covered by the supplied map,
 #' and calculate World from the unaggregated population to avoid double counting.
 #'
-#' @param population Population data in long format.
+#' @param population Pop data in long format.
 #' @param regSubsetMap Mapping with `region` and `aggrReg` columns.
 #'
-#' @returns Population data containing the original, aggregate, and World regions.
-#' @keywords internal
+#' @returns Pop data containing the original, aggregated, and World regions.
 #' @noRd
 
 aggregatePopulation <- function(population, regSubsetMap) {

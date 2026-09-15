@@ -1,10 +1,9 @@
-#' Calculate per-capita reporting variables
+#' Calculate per-capita variables based on GDP|PPP
 #'
 #' @param dt Aggregated MIF variables.
 #'
 #' @returns Per-capita variables.
 #' @import data.table
-#' @keywords internal
 #' @noRd
 
 calcPerCapita <- function(dt) {
@@ -47,6 +46,8 @@ calcPerCapita <- function(dt) {
     "ES|Transport|Freight|Road|Gases",
     "ES|Transport|Freight|Road|Liquids"
   )
+
+  #build a lookup table with one row per variable that should get a p.c. twin
   perCapitaVariables <- data.table(
     variable = c("GDP|PPP", passengerVariables, freightVariables,
                  "Stock|Transport|Pass|Road|LDV|Four Wheelers"),

@@ -163,7 +163,7 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExte
   } else {toMIF <- rbind(toMIFint, toMIFext)}
 
   # Sales shares must be calculated after both regional and variable
-  # aggregation so aggregate-region shares use aggregate-region sales.
+  # aggregation so aggregated-region shares are calculated based on aggregated-region sales.
   if (reportSalesTechnologyShares) {
     salesTechnologyShares <- calcShares(toMIF, salesTechnologyShareGroups())
     toMIF <- rbind(toMIF, salesTechnologyShares)
