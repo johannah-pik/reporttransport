@@ -16,6 +16,8 @@
 convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExtendedReported = FALSE) {       # nolint: object_name_linter
   rownum <- name <- fuel <- aggrReg <- variable <- reportName <- region <- univocalName <- technology <- NULL
 
+  reportSalesTechnologyShares <- "sales" %in% names(vars$ext)
+
   applyReportingNames <- function(vars, mapNames) {
 
     rename <- function(columns, mapNames) {
@@ -46,7 +48,9 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExte
 
   noAggregationvars <- rbindlist(vars$int[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE)
   varsToMIFint <- rbindlist(vars$int[!names(vars$int) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE)
-  varsToMIFext <- rbindlist(vars$ext[!names(vars$ext) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE)
+  population <- copy(vars$ext$population)
+  vars$ext$population <- NULL
+  varsToMIFext <- rbindlist(vars$ext[!names(vars$ext) %in% c("GDPppp", "GDPMER")], fill = TRUE, use.names = TRUE)
 
   # Regional aggregation----------------------------------------------------------------------
   ## Aggregation to world is always supplied
@@ -104,6 +108,10 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExte
   regSubsetMap <- rbind(regSubsetMap, EU27)
   setnames(regSubsetMap, c("regionCode21", "regionCode12"), c("region", "aggrReg"))
 
+  if (!is.null(population)) {
+    population <- aggregatePopulation(population, regSubsetMap)
+  }
+
   regSubsetDataExt <- lapply(vars$ext, function(x, regSubsetMap) {
     as.data.table(aggregate_map(x[region %in% unique(regSubsetMap$region)],
                                 regSubsetMap, by = "region"))}, regSubsetMap)
@@ -126,17 +134,18 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExte
   noAggregationvars <- rbind(noAggregationvars,
                              rbindlist(regSubsetDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
                              rbindlist(worldDataInt[c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
-                             rbindlist(vars$ext[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                             rbindlist(regSubsetDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                             rbindlist(worldDataExt[c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
+                             rbindlist(vars$ext[c("GDPppp", "GDPMER")], fill = TRUE, use.names = TRUE),
+                             rbindlist(regSubsetDataExt[c("GDPppp", "GDPMER")], fill = TRUE, use.names = TRUE),
+                             rbindlist(worldDataExt[c("GDPppp", "GDPMER")], fill = TRUE, use.names = TRUE),
+                             population)
 
   varsToMIFint <- rbind(varsToMIFint,
                         rbindlist(regSubsetDataInt[!names(regSubsetDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE),
                         rbindlist(worldDataInt[!names(worldDataInt) %in% c("GDPpcPPP", "GDPpcMER")], fill = TRUE, use.names = TRUE))
 
   varsToMIFext <- rbind(varsToMIFext,
-                        rbindlist(regSubsetDataExt[!names(regSubsetDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE),
-                        rbindlist(worldDataExt[!names(worldDataExt) %in% c("GDPppp", "population", "GDPMER")], fill = TRUE, use.names = TRUE))
+                        rbindlist(regSubsetDataExt[!names(regSubsetDataExt) %in% c("GDPppp", "GDPMER")], fill = TRUE, use.names = TRUE),
+                        rbindlist(worldDataExt[!names(worldDataExt) %in% c("GDPppp", "GDPMER")], fill = TRUE, use.names = TRUE))
 
 
   # Apply variable naming convention----------------------------------------------------------
@@ -152,6 +161,17 @@ convertToMIF <- function(vars, GDPMER, helpers, scenario, model, isTransportExte
   if (!is.null(noAggregationvars)) {
     toMIF <- rbind(toMIFint, toMIFext, noAggregationvars)
   } else {toMIF <- rbind(toMIFint, toMIFext)}
+
+  # Sales shares must be calculated after both regional and variable
+  # aggregation so aggregated-region shares are calculated based on aggregated-region sales.
+  if (reportSalesTechnologyShares) {
+    salesTechnologyShares <- calcShares(toMIF, salesTechnologyShareGroups())
+    toMIF <- rbind(toMIF, salesTechnologyShares)
+  }
+
+  if ("Population" %chin% toMIF$variable) {
+    toMIF <- rbind(toMIF, calcPerCapita(toMIF))
+  }
 
   if (!is.null(vars$analytic)) {
     analyticVars <- rbindlist(vars$analytic, use.names = TRUE)
