@@ -35,7 +35,6 @@
 #' @returns The function either returns the REMINDinputData if isREMINDinputReported is
 #'          enabled or the transport data in MIF format
 #' @author Johanna Hoppe
-#' @importFrom quitte write.mif
 #' @import data.table
 #' @export
 
@@ -74,11 +73,11 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
    filesToLoad <- c(filesToLoad, add[!add %in% filesToLoad])
   }
   if (isTransportReported) {
-    add <- c("upfrontCAPEXtrackedFleet")
+    add <- c("upfrontCAPEXtrackedFleet", "population", "GDPppp")
     filesToLoad <- c(filesToLoad, add[!add %in% filesToLoad])
 
     if (isTransportExtendedReported) {
-      add <- c("population", "GDPppp", "GDPpcPPP", "GDPpcMER","GDPMER", "annualMileage", "energyIntensityRaw",
+      add <- c("GDPpcPPP", "GDPpcMER", "GDPMER", "annualMileage", "energyIntensityRaw",
                "loadFactorRaw", "CAPEXother", "nonFuelOPEXother", "nonFuelOPEXtrackedFleet", "subsidies",
                "timeValueCosts", "scenSpecPrefTrends", "initialIncoCosts")
       filesToLoad <- c(filesToLoad, add[!add %in% filesToLoad])
@@ -110,7 +109,7 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
 
       # path to the gdx file on the REMIND cluster
       message("Trying fallback path ..")
-      gdxPath <- "/p/projects/rd3mod/inputdata/sources/REMINDinputForTransportStandalone/v1.2/fulldata.gdx"
+      gdxPath <- "/p/projects/rd3mod/inputdata/sources/REMINDinputForTransportStandalone/v1.3/fulldata.gdx"
 
       if (!file.exists(gdxPath)) {
         stop("No gdx file found.\n")
@@ -132,6 +131,17 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
     data <- c(data, addFiles)
   }
 
+  if (isTransportReported && is.null(data$population)) {
+    population <- rmndt::magpie2dt(
+      gdx2::readGDX(data$gdxPath, "pm_pop", restoreZeros = FALSE),
+      yearcol = "period", regioncol = "region"
+    )
+    population[, value := value * 1e3]
+    population[, `:=`(variable = "Population", unit = "million")]
+    population[, "data" := NULL]
+    data$population <- population
+  }
+
 
   #########################################################################
   ## Report output variables
@@ -147,7 +157,7 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
     # Overwrite the full data on sales level with the harmonized data on fleet level
     data$ESdemandFVsalesLevel <- harmESdemandFV
     # Overwrite specifically the data that is taken for LDV 4W demand on fleet level
-    data$fleetSizeAndComposition$fleetESdemand <- harmESdemandFV[subsectorL3 %in% unique(data$fleetSizeAndComposition$fleetESdemand$subsectorL3)]
+    data$fleetSizeAndComposition$fleetESdemand <- harmESdemandFV[subsectorL3 %in% data$fleetSizeAndComposition$fleetESdemand$subsectorL3]
   }
 
   # Base variable set that is needed to report REMIND input data and additional detailed transport data
@@ -230,7 +240,7 @@ reportEdgeTransport <- function(folderPath = file.path(".", "EDGE-T"), data = NU
                               model                       = data$modelName,
                               isTransportExtendedReported = isTransportExtendedReported)
 
-    if (isStored) write.mif(reporting, file.path(folderPath, "Transport.mif"))
+    if (isStored) quitte::write.mif(reporting, file.path(folderPath, "Transport.mif"))
 
     if (isHarmonized) {
       # Load shared variables of REMIND and edge-t (reported by remind2 and reporttransport)

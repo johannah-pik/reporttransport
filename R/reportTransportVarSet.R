@@ -47,6 +47,12 @@ reportTransportVarSet <- function(data, baseVarSet) {
   sales[, variable := "Sales"][, constrYear := NULL]
   sales <- approx_dt(sales, unique(fleetEmissions$period), "period", "value", extrapolate = TRUE)
 
+  if (!is.null(data$GDPppp)) {
+    gdpPPP <- copy(data$GDPppp)
+    gdpPPP[grepl("mil\\..*", unit), value := value * 1e-3]
+    gdpPPP[, unit := gsub("mil\\.", "billion", unit)]
+  }
+
   # Report yearly investment costs-------------------------------------------------------------------------
   fleetES <- copy(baseVarSet$ext$fleetESdemand)
   fleetES[, c("variable", "unit") := NULL]
@@ -85,6 +91,12 @@ reportTransportVarSet <- function(data, baseVarSet) {
                         sales = sales,
                         stock = data$fleetSizeAndComposition$fleetVehNumbers,
                         fleetYrlCosts = fleetYrlCosts)
+  if (!is.null(data$population)) {
+    outputVarsExt <- c(outputVarsExt, list(population = data$population))
+  }
+  if (!is.null(data$GDPppp)) {
+    outputVarsExt <- c(outputVarsExt, list(GDPppp = gdpPPP))
+  }
   outputVarsInt <- list(fleetEnergyIntensity = baseVarSet$int$fleetEnergyIntensity)
   if (!is.null(data$upfrontCAPEXtrackedFleet)) outputVarsInt <- c(outputVarsInt, list(upfrontCAPEXtrackedFleet = upfrontCAPEXtrackedFleet))
   outputVars <- list(ext = outputVarsExt,

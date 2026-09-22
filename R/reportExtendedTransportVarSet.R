@@ -39,10 +39,6 @@ reportExtendedTransportVarSet <- function(data, baseVarSet, timeResReporting) {
                                                         names(data$helpers$decisionTree)))
   combinedCAPEXandOPEX[, variable := paste0("TCO sales ", variable)]
 
-  if (!is.null(data$GDPppp)) {
-    data$GDPppp[grepl("mil\\..*", unit), value := value * 1e-3][, unit := gsub("mil\\.", "billion", unit)]
-    outputVarsExt <- c(outputVarsExt, list(GDPppp = data$GDPppp))
-  }
   if (!is.null(data$GDPpcPPP)) {
     data$GDPpcPPP[grepl("mil\\..*", unit), value := value * 1e-3][, unit := gsub("mil\\.", "billion", unit)]
     outputVarsInt <- c(outputVarsInt, list(GDPpcPPP = data$GDPpcPPP))
@@ -55,10 +51,6 @@ reportExtendedTransportVarSet <- function(data, baseVarSet, timeResReporting) {
     data$GDPpcMER[grepl("mil\\..*", unit), value := value * 1e-3][, unit := gsub("mil\\.", "billion", unit)]
     outputVarsInt <- c(outputVarsInt, list(GDPpcMER = data$GDPpcMER))
   }
-  if (!is.null(data$population)) {
-    outputVarsExt <- c(outputVarsExt, list(population = data$population))
-  }
-
   # Report transport input data if available
   inputData <- c("timeValueCosts", "annualMileage", "scenSpecLoadFactor",
                  "loadFactorRaw", "scenSpecEnIntensity", "energyIntensityRaw")
